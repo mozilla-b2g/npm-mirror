@@ -1,0 +1,81 @@
+#!/usr/bin/env node
+/*global module, process, require*/
+var SyncManager = require('../lib/syncmanager'),
+    check = require('validator').check,
+    fs = require('fs'),
+    path = require('path'),
+    program = require('commander');
+
+
+/**
+ * Find and parse manifest file.
+ *
+ * @param {string} manifestFile path to node module manifest file.
+ * @return {Object} JSON-parsed module manifest.
+ */
+function parseManifest(manifestFile) {
+  manifestFile = path.resolve(__dirname, '..', manifestFile);
+  if (!fs.existsSync(manifestFile)) {
+    throw new Error('Could not find manifest at ' + manifestFile);
+  }
+
+  return require(manifestFile);
+}
+
+/**
+ * Make a packages directory if there isn't one already.
+ *
+ * @param {string} packageDir path for mirrored packages.
+ */
+function resolvepackageDir(packageDir) {
+  var packageDir = path.resolve(__dirname, '..', packageDir);
+  if (!fs.existsSync(packageDir)) {
+    fs.mkdirSync(packageDir);
+  }
+
+  return packageDir;
+}
+
+function main() {
+  program
+    .version('0.0.1')
+    .usage([
+      '--host', '<host>',
+      '--manifestFile', '<file>',
+      '--registry', '<url>',
+      '--packageDir', '<path>'
+    ].join(' '))
+    .usage('--host <host> --manifestFile <file> --registry <url> --packageDir <path>')
+    .option('--host [host]', 'Hostname for npm mirror')
+    .option('--manifestFile [file]', 'Node module manifest file')
+    .option('--registry [url]', 'NPM registry to mirror packages from')
+    .option('--packageDir [path]', 'Path to write downloaded packages')
+    .parse(process.argv);
+
+  if (!(program.host &&
+        program.packageDir &&
+        program.manifestFile &&
+        program.registry)) {
+    program.help();
+  }
+
+
+  var host = program.host;
+  check(host).isUrl();
+  var manifest = parseManifest(program.manifestFile);
+  var packages = Object.keys(manifest.dependencies);
+  if (manifest.name) {
+    packages.push(manifest.name);
+  }
+  var registry = program.registry;
+  check(registry).isUrl();
+  var packageDir = resolvepackageDir(program.packageDir);
+  var syncManager = new SyncManager(host, packages, registry, packageDir);
+  syncManager.sync(function() {
+    // ...
+  });
+}
+
+if (require.main === module) {
+  main();
+}

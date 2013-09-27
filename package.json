@@ -1,0 +1,33 @@
+{
+  "name": "npm-mirror",
+  "version": "0.0.1",
+
+  "contributors": [
+    "Gareth Aye <gareth.aye@gmail.com>",
+    "Will LaChance <wlachance@mozilla.com>"
+  ],
+
+  "dependencies": {
+    "commander": "~2.0.0",
+    "debug": "~0.7.2",
+    "validator": "~1.5.1"
+  },
+
+  "devDependencies": {
+    "jshint": "~2.1.11",
+    "mocha": "~1.13.0",
+    "proxyquire": "~0.5.1",
+    "sinon": "~1.7.3"
+  },
+
+  "keywords": [
+    "mirror",
+    "npm",
+    "registry"
+  ],
+
+  "scripts": {
+    "main": "bin/npm_mirror",
+    "test": "make"
+  }
+}

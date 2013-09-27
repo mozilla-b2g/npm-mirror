@@ -1,0 +1,5 @@
+--recursive
+--reporter spec
+--require test/helper.js
+--timeout 30s
+--ui tdd
