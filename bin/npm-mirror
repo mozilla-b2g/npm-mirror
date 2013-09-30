@@ -63,9 +63,14 @@ function main() {
   var host = program.host;
   check(host).isUrl();
   var manifest = parseManifest(program.manifestFile);
-  var packages = Object.keys(manifest.dependencies);
+  var packages = [];
   if (manifest.name) {
     packages.push(manifest.name);
+  }
+  if (manifest.dependencies) {
+    Object.keys(manifest.dependencies).forEach(function(dependency) {
+      packages.push(dependency);
+    });
   }
   var registry = program.registry;
   check(registry).isUrl();
