@@ -174,7 +174,7 @@ suite('SyncManager', function() {
       syncPackageDeps.callsArgAsync(3);
 
       savePackageVersion = sinon.stub(subject, 'savePackageVersion');
-      savePackageVersion.callsArgAsync(3);
+      savePackageVersion.callsArgAsync(4);
 
       downloadToDisk = sinon.stub(SyncManager, 'downloadToDisk');
       downloadToDisk.callsArgAsync(3);
@@ -254,11 +254,15 @@ suite('SyncManager', function() {
       'b': '2.0.0',
       'c': '3.0.0'
     };
+    var devDependencies = {
+      'd': '4.0.0'
+    };
 
     setup(function(done) {
       writeFile = sinon.stub(mockfs.fs, 'writeFile');
       writeFile.callsArgAsync(2);
-      subject.savePackageVersion(packageName, version, dependencies, done);
+      subject.savePackageVersion(
+        packageName, version, dependencies, devDependencies, done);
     });
 
     teardown(function() {
@@ -272,6 +276,7 @@ suite('SyncManager', function() {
         name: packageName,
         version: version,
         dependencies: dependencies,
+        devDependencies: devDependencies,
         dist: {
           tarball: 'http://localhost/a/1.0.0/a-1.0.0.tgz'
         }

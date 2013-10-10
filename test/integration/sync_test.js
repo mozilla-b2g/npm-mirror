@@ -55,7 +55,9 @@ suite('first time sync', function() {
       });
     });
 
-    test('should write package root object', function(done) {
+    // TODO(gaye): Turn this back on once we close 925424.
+    //     Right now it's taking way too long to sync.
+    test.skip('should write package root object', function(done) {
       var count = packages.length;
       packages.forEach(function(packageName) {
         var packageRoot = path.resolve(packageDir, packageName, 'index.json');
