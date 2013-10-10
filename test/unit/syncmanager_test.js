@@ -134,8 +134,8 @@ suite('SyncManager', function() {
         name: packageName,
         _id: packageName,
         versions: {
-          '0.0.1': 'http://localhost/a/0.0.1/a-0.0.1.tgz',
-          '1.0.0': 'http://localhost/a/1.0.0/a-1.0.0.tgz'
+          '0.0.1': 'http://localhost/a/0.0.1',
+          '1.0.0': 'http://localhost/a/1.0.0'
         },
         'dist-tags': {
           latest: '1.0.0'
@@ -278,6 +278,15 @@ suite('SyncManager', function() {
       });
 
       assert.calledWith(writeFile, filename, packageVersionData);
+    });
+  });
+
+  suite('#getPackageVersionUrl', function() {
+    test('should build the url', function() {
+      assert.strictEqual(
+        subject.getPackageVersionUrl('a', '0.0.1'),
+        'http://localhost/a/0.0.1'
+      );
     });
   });
 
