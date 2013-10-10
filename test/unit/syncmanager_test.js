@@ -1,8 +1,8 @@
-/*global assert, path, require, setup, sinon, suite, teardown, test, url*/
+/*global path, url*/
 var mockfs = require('../mock/fs'),
     proxyquire = require('proxyquire');
 var SyncManager = proxyquire('../../lib/syncmanager', {
-  'fs': mockfs.fs
+  'graceful-fs': mockfs.fs
 });
 
 
@@ -254,11 +254,18 @@ suite('SyncManager', function() {
       'b': '2.0.0',
       'c': '3.0.0'
     };
+    var devDependencies = {
+      'd': '4.0.0'
+    };
 
     setup(function(done) {
       writeFile = sinon.stub(mockfs.fs, 'writeFile');
       writeFile.callsArgAsync(2);
-      subject.savePackageVersion(packageName, version, dependencies, done);
+      subject.savePackageVersion(
+        packageName, version, {
+          dependencies: dependencies,
+          devDependencies: devDependencies
+        }, done);
     });
 
     teardown(function() {
@@ -272,6 +279,7 @@ suite('SyncManager', function() {
         name: packageName,
         version: version,
         dependencies: dependencies,
+        devDependencies: devDependencies,
         dist: {
           tarball: 'http://localhost/a/1.0.0/a-1.0.0.tgz'
         }

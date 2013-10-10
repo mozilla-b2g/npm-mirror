@@ -73,5 +73,16 @@
   "white"         : false,    // true: Check against strict whitespace and indentation rules
 
   // Custom Globals
-  "globals"       : {}        // additional predefined global variables
+  "globals"       : {
+    "assert": false,
+    "module": false,
+    "require": false,
+    "setup": false,
+    "sinon": false,
+    "suite": false,
+    "suiteSetup": false,
+    "suiteTeardown": false,
+    "teardown": false,
+    "test": false
+  }
 }
