@@ -2,7 +2,7 @@
 /*global module, process, require*/
 var SyncManager = require('../lib/syncmanager'),
     check = require('validator').check,
-    fs = require('fs'),
+    fs = require('graceful-fs'),
     path = require('path'),
     program = require('commander');
 

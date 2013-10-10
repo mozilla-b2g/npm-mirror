@@ -1,6 +1,7 @@
 {
   "name": "npm-mirror",
   "version": "0.0.1",
+  "repository": "https://github.com/mozilla-b2g/npm-mirror",
 
   "contributors": [
     "Gareth Aye <gareth.aye@gmail.com>",
@@ -10,6 +11,7 @@
   "dependencies": {
     "commander": "~2.0.0",
     "debug": "~0.7.2",
+    "graceful-fs": "~2.0.1",
     "validator": "~1.5.1"
   },
 

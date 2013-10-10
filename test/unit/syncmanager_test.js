@@ -2,7 +2,7 @@
 var mockfs = require('../mock/fs'),
     proxyquire = require('proxyquire');
 var SyncManager = proxyquire('../../lib/syncmanager', {
-  'fs': mockfs.fs
+  'graceful-fs': mockfs.fs
 });
 
 
