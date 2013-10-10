@@ -3,20 +3,24 @@ npm-mirror
 
 [![Build Status](https://travis-ci.org/mozilla-b2g/npm-mirror.png?branch=master)](https://travis-ci.org/mozilla-b2g/npm-mirror)
 
-A utility for mirroring a subset of npm packages from another npm registry.
+npm-mirror is a utility for mirroring a subset of npm packages from another npm registry. It syncs all of the dependencies for a particular node module and writes them to the local filesystem so that a simple webserver can behave like a commonjs compliant package registry. One noteable caveat is that your webserver must be configured to map root requests to index.json files.
 
 ## Getting Started
 
 ```
-git clone git@github.com:mozilla-b2g/npm-mirror.git
+npm install -g npm-mirror
+cd npm-mirror
 npm install
-bin/npm-mirror \
-  --host http://localhost \
-  --manifestFile package.json \
+
+DEBUG=* bin/npm-mirror \
+  --host http://secret-npm-mirror.com \
+  --manifestFile /path/to/target/package.json \
   --registry http://registry.npmjs.org \
-  --packageDir packages/
+  --packageDir /where/we/put/packages/
+
 // Start webserver rooted in packages directory
-npm install --registry http://localhost
+cd /path/to/target
+npm install --registry http://secret-npm-mirror.com
 ```
 
 ## Test Suite
