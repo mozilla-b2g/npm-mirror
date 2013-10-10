@@ -1,4 +1,4 @@
-/*global assert, path, require, setup, sinon, suite, teardown, test, url*/
+/*global path, url*/
 var mockfs = require('../mock/fs'),
     proxyquire = require('proxyquire');
 var SyncManager = proxyquire('../../lib/syncmanager', {
@@ -174,7 +174,7 @@ suite('SyncManager', function() {
       syncPackageDeps.callsArgAsync(3);
 
       savePackageVersion = sinon.stub(subject, 'savePackageVersion');
-      savePackageVersion.callsArgAsync(4);
+      savePackageVersion.callsArgAsync(3);
 
       downloadToDisk = sinon.stub(SyncManager, 'downloadToDisk');
       downloadToDisk.callsArgAsync(3);
@@ -262,7 +262,10 @@ suite('SyncManager', function() {
       writeFile = sinon.stub(mockfs.fs, 'writeFile');
       writeFile.callsArgAsync(2);
       subject.savePackageVersion(
-        packageName, version, dependencies, devDependencies, done);
+        packageName, version, {
+          dependencies: dependencies,
+          devDependencies: devDependencies
+        }, done);
     });
 
     teardown(function() {
