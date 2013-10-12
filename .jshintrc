@@ -75,6 +75,7 @@
   // Custom Globals
   "globals"       : {
     "assert": false,
+    "global": false,
     "module": false,
     "require": false,
     "setup": false,

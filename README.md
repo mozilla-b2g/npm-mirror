@@ -12,11 +12,11 @@ npm install -g npm-mirror
 cd npm-mirror
 npm install
 
-DEBUG=* bin/npm-mirror \
-  --host http://secret-npm-mirror.com \
-  --manifestFile /path/to/target/package.json \
-  --registry http://registry.npmjs.org \
-  --packageDir /where/we/put/packages/
+DEBUG=npm-mirror:SyncManager bin/npm-mirror \
+  --master http://registry.npmjs.org \
+  --manifest /path/to/target/package.json \
+  --hostname http://secret-npm-mirror.com \
+  --root /where/we/put/packages/
 
 // Start webserver rooted in packages directory
 cd /path/to/target
