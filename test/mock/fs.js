@@ -6,6 +6,10 @@ var fs = {
     });
   },
 
+  mkdir: function(path, callback) {
+    return callback && process.nextTick(callback);
+  },
+
   writeFile: function(filename, data, callback) {
     return callback && process.nextTick(callback);
   }

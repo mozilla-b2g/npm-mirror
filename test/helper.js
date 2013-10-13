@@ -1,9 +1,6 @@
 /*global global, require*/
 global.assert = require('assert');
-global.fs = require('fs');
-global.path = require('path');
 global.sinon = require('sinon');
-global.url = require('url');
 
 for (var key in global.sinon.assert) {
   global.assert[key] = global.sinon.assert[key];
@@ -18,9 +15,9 @@ for (var key in global.sinon.assert) {
 global.waitFor = function(test, callback) {
   (function runTest() {
     if (test()) {
-      return callback();
+      return callback && callback();
     }
 
-    setTimeout(runTest, 1000);
+    setTimeout(runTest, 100);
   })();
 };
