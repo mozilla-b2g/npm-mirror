@@ -13,7 +13,6 @@
     "debug": "~0.7.2",
     "graceful-fs": "~2.0.1",
     "semver": "~2.1.0",
-    "string": "~1.6.0",
     "validator": "~1.5.1"
   },
 
