@@ -68,10 +68,6 @@ function main() {
   var master = program.master;
   check(master).isUrl();
   var root = resolveRoot(program.root);
-  console.log(master);
-  console.log(packageToVersions);
-  console.log(hostname);
-  console.log(root);
   var syncManager = new SyncManager(master, packageToVersions, hostname, root);
   debug('sync from ' + master);
   debug(JSON.stringify(packageToVersions));
