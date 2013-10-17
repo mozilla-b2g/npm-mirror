@@ -28,6 +28,24 @@ cd /path/to/target
 npm install --registry http://secret-npm-mirror.com
 ```
 
+### A Word About Arguments
+
+#### master
+
+a fully qualified url for the master registry's root
+
+### manifest
+
+a fully qualifed path to a manifest file (ie https://npmjs.org/doc/json.html)
+
+#### hostname
+
+a fully qualifed url at which the mirrored packages will be served
+
+#### root
+
+a fully qualifed path for where to put downloaded packages
+
 ## Test Suite
 
 `make test` runs the test suite. Unit tests live in `test/unit` and integration tests live in `test/integration`. In order for the integration tests to run successfully, you must be connected to the Internet since packages will be downloaded from http://registry.npmjs.org.
