@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/*global module, process, require*/
-var SyncManager = require('../lib/syncmanager'),
+var Package = require('../lib/package'),
+    SyncManager = require('../lib/syncmanager'),
     check = require('validator').check,
+    debug = require('debug')('npm-mirror'),
     fs = require('graceful-fs'),
     path = require('path'),
     program = require('commander');
@@ -25,59 +26,57 @@ function parseManifest(manifestFile) {
 /**
  * Make a packages directory if there isn't one already.
  *
- * @param {string} packageDir path for mirrored packages.
+ * @param {string} root path for mirrored packages.
  */
-function resolvepackageDir(packageDir) {
-  var packageDir = path.resolve(__dirname, '..', packageDir);
-  if (!fs.existsSync(packageDir)) {
-    fs.mkdirSync(packageDir);
+function resolveRoot(root) {
+  var root = path.resolve(__dirname, '..', root);
+  if (!fs.existsSync(root)) {
+    fs.mkdirSync(root);
   }
 
-  return packageDir;
+  return root;
 }
 
 function main() {
   program
     .version('0.0.1')
     .usage([
-      '--host', '<host>',
-      '--manifestFile', '<file>',
-      '--registry', '<url>',
-      '--packageDir', '<path>'
+      '--master', '<host>',
+      '--manifest', '<file>',
+      '--hostname', '<url>',
+      '--root', '<path>'
     ].join(' '))
-    .usage('--host <host> --manifestFile <file> --registry <url> --packageDir <path>')
-    .option('--host [host]', 'Hostname for npm mirror')
-    .option('--manifestFile [file]', 'Node module manifest file')
-    .option('--registry [url]', 'NPM registry to mirror packages from')
-    .option('--packageDir [path]', 'Path to write downloaded packages')
+    .option('--master [url]', 'NPM registry to mirror packages from')
+    .option('--manifest [file]', 'Node module manifest file')
+    .option('--hostname [hostname]', 'Hostname for npm mirror')
+    .option('--root [path]', 'Path to write downloaded packages')
     .parse(process.argv);
 
-  if (!(program.host &&
-        program.packageDir &&
-        program.manifestFile &&
-        program.registry)) {
+  if (!(program.master &&
+        program.manifest &&
+        program.hostname &&
+        program.root)) {
     program.help();
   }
 
+  var hostname = program.hostname;
+  check(hostname).isUrl();
+  var manifest = parseManifest(program.manifest);
+  // We shouldn't sync the manifest's package since we want
+  // the mirror to be able to sync the dependencies of private packages.
+  var packageToVersions = Package.dependencies(manifest);
+  var master = program.master;
+  check(master).isUrl();
+  var root = resolveRoot(program.root);
+  var syncManager = new SyncManager(master, packageToVersions, hostname, root);
+  debug('sync from ' + master);
+  debug(JSON.stringify(packageToVersions));
+  syncManager.sync(function(e) {
+    if (e) {
+      throw e;
+    }
 
-  var host = program.host;
-  check(host).isUrl();
-  var manifest = parseManifest(program.manifestFile);
-  var packages = [];
-  if (manifest.name) {
-    packages.push(manifest.name);
-  }
-  if (manifest.dependencies) {
-    Object.keys(manifest.dependencies).forEach(function(dependency) {
-      packages.push(dependency);
-    });
-  }
-  var registry = program.registry;
-  check(registry).isUrl();
-  var packageDir = resolvepackageDir(program.packageDir);
-  var syncManager = new SyncManager(host, packages, registry, packageDir);
-  syncManager.sync(function() {
-    // ...
+    debug('done');
   });
 }
 

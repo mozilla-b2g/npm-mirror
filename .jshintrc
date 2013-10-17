@@ -74,7 +74,9 @@
 
   // Custom Globals
   "globals"       : {
+    "__dirname": false,
     "assert": false,
+    "global": false,
     "module": false,
     "require": false,
     "setup": false,
@@ -83,6 +85,7 @@
     "suiteSetup": false,
     "suiteTeardown": false,
     "teardown": false,
-    "test": false
+    "test": false,
+    "waitFor": false
   }
 }
