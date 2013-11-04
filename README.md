@@ -14,10 +14,8 @@ npm-mirror is a utility for mirroring a subset of npm packages from another npm 
 
 ```
 npm install -g npm-mirror
-cd npm-mirror
-npm install
 
-DEBUG=npm-mirror:SyncManager bin/npm-mirror \
+DEBUG=npm-mirror:SyncManager npm-mirror \
   --master http://registry.npmjs.org \
   --manifest /path/to/target/package.json \
   --hostname http://secret-npm-mirror.com \
