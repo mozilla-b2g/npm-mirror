@@ -17,11 +17,13 @@ npm install -g npm-mirror
 
 DEBUG=npm-mirror:SyncManager npm-mirror \
   --master http://registry.npmjs.org \
-  --manifest /path/to/target/package.json \
+  --manifest /absolute/path/to/target/package.json \
   --hostname http://secret-npm-mirror.com \
-  --root /where/we/put/packages/
+  --root /absolute/path/to/download/packages/
 
 // Start webserver rooted in packages directory
+
+// Give it a whirl
 cd /path/to/target
 npm install --registry http://secret-npm-mirror.com
 ```
