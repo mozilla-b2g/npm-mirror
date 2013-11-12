@@ -61,7 +61,7 @@ suite('sync', function() {
   var childProcess, master, manifests, hostname, root;
 
   suite('first time', function() {
-    suiteSetup(function() {
+    suiteSetup(function(done) {
       master = 'http://registry.npmjs.org';
       manifests = [
         path.resolve(__dirname, '../fixtures', 'gaia.json'),
@@ -81,17 +81,16 @@ suite('sync', function() {
 
       console.log(cmd);
       childProcess = exec(cmd);
+      childProcess.once('exit', function() {
+        done()
+      });
     });
 
     suiteTeardown(function(done) {
+      childProcess = exec('rm -rf ' + root);
       childProcess.once('exit', function() {
-        childProcess = exec('rm -rf ' + root);
-        childProcess.on('exit', function() {
-          done();
-        });
+        done();
       });
-
-      childProcess.kill();
     });
 
     test('should make sure root exists', function(done) {
