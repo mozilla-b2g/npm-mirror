@@ -43,6 +43,50 @@ suite('Package', function() {
     );
   });
 
+  test('#mergeDependencies', function() {
+    assert.deepEqual(
+      subject.mergeDependencies([
+        {
+          'a': {
+            '1.0.0': true,
+            '2.0.0': true,
+            '3.0.0': true
+          },
+          'b': {
+            '1.0.0': true
+          }
+        },
+        {
+          'a': {
+            '4.0.0': true
+          },
+          'c': {
+            '1.0.0': true
+          }
+        },
+        {
+          'c': {
+            '1.0.0': true
+          }
+        }
+      ]),
+      {
+        'a': {
+          '1.0.0': true,
+          '2.0.0': true,
+          '3.0.0': true,
+          '4.0.0': true
+        },
+        'b': {
+          '1.0.0': true
+        },
+        'c': {
+          '1.0.0': true
+        }
+      }
+    );
+  });
+
   suite('#version', function() {
     test('when version is valid', function(done) {
       function onVersion(e, version) {

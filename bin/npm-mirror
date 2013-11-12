@@ -42,32 +42,44 @@ function main() {
     .version('0.2.2')
     .usage([
       '--master', '<host>',
-      '--manifest', '<file>',
+      '--manifests', '<file_1,file_2,...file_n>',
       '--hostname', '<url>',
       '--root', '<path>'
     ].join(' '))
     .option('--master [url]', 'NPM registry to mirror packages from')
-    .option('--manifest [file]', 'Node module manifest file')
+    .option('--manifests [comma separated files]', 'Node module manifest files')
     .option('--hostname [hostname]', 'Hostname for npm mirror')
     .option('--root [path]', 'Path to write downloaded packages')
     .parse(process.argv);
 
   if (!(program.master &&
-        program.manifest &&
+        program.manifests &&
         program.hostname &&
         program.root)) {
     program.help();
   }
 
+  // hostname
   var hostname = program.hostname;
   check(hostname).isUrl();
-  var manifest = parseManifest(program.manifest);
-  // We shouldn't sync the manifest's package since we want
-  // the mirror to be able to sync the dependencies of private packages.
-  var packageToVersions = Package.dependencies(manifest);
+
+  // manifests
+  var dependencies = program.manifests.split(',')
+    .map(function(manifestFile) {
+      return parseManifest(manifestFile);
+    })
+    .map(function(manifest) {
+      return Package.dependencies(manifest);
+    });
+  var packageToVersions = Package.mergeDependencies(dependencies);
+
+  // master
   var master = program.master;
   check(master).isUrl();
+
+  // root
   var root = resolveRoot(program.root);
+
   var syncManager = new SyncManager(master, packageToVersions, hostname, root);
   debug('sync from ' + master);
   debug(JSON.stringify(packageToVersions));
