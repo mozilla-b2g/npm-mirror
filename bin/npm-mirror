@@ -39,7 +39,7 @@ function resolveRoot(root) {
 
 function main() {
   program
-    .version('0.2.2')
+    .version('1.0.0')
     .usage([
       '--master', '<host>',
       '--manifests', '<file_1,file_2,...file_n>',
