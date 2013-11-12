@@ -82,7 +82,7 @@ suite('sync', function() {
       console.log(cmd);
       childProcess = exec(cmd);
       childProcess.once('exit', function() {
-        done()
+        done();
       });
     });
 
