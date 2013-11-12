@@ -58,12 +58,15 @@ function assertAllSynced(manifest, types, root, done) {
 
 
 suite('sync', function() {
-  var childProcess, master, manifest, hostname, root;
+  var childProcess, master, manifests, hostname, root;
 
   suite('first time', function() {
     suiteSetup(function() {
       master = 'http://registry.npmjs.org';
-      manifest = path.resolve(__dirname, '../..', 'package.json');
+      manifests = [
+        path.resolve(__dirname, '../fixtures', 'gaia.json'),
+        path.resolve(__dirname, '../fixtures', 'npm-mirror.json')
+      ];
       hostname = 'http://npm-mirror.pub.build.mozilla.org';
       root = path.resolve(__dirname, '../..', 'tmp');
 
@@ -71,7 +74,7 @@ suite('sync', function() {
       var cmd = [
         binary,
         '--master', master,
-        '--manifest', manifest,
+        '--manifests', manifests.join(','),
         '--hostname', hostname,
         '--root', root
       ].join(' ');
@@ -98,12 +101,16 @@ suite('sync', function() {
       }, done);
     });
 
-    test('should sync all dependencies', function(done) {
-      assertAllSynced(manifest, ['dependencies'], root, done);
+    test('should sync all gaia devDependencies', function(done) {
+      assertAllSynced(manifests[0], ['devDependencies'], root, done);
     });
 
-    test('should sync all devDependencies', function(done) {
-      assertAllSynced(manifest, ['devDependencies'], root, done);
+    test('should sync all npm-mirror dependencies', function(done) {
+      assertAllSynced(manifests[1], ['dependencies'], root, done);
+    });
+
+    test('should sync all npm-mirror devDependencies', function(done) {
+      assertAllSynced(manifests[1], ['devDependencies'], root, done);
     });
   });
 
