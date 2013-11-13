@@ -1,12 +1,59 @@
 #!/usr/bin/env node
-var Package = require('../lib/package'),
+var Download = require('../lib/download'),
+    Package = require('../lib/package'),
     SyncManager = require('../lib/syncmanager'),
+    UrlCheck = require('../lib/urlcheck'),
     check = require('validator').check,
     debug = require('debug')('npm-mirror'),
     fs = require('graceful-fs'),
+    maybeMkdir = require('../lib/maybemkdir'),
     path = require('path'),
-    program = require('commander');
+    program = require('commander'),
+    uuid = require('node-uuid');
 
+
+/**
+ * In https://bugzilla.mozilla.org/show_bug.cgi?id=937791 we add support for
+ * specifying manifests as http urls. This function makes a manifests directory
+ * and downloads all remote manifests into it.
+ *
+ * @param {string} manifests comma separated list of manifests.
+ * @param {Function} callback(err, manifests) {};.
+ */
+function downloadManifests(manifests, callback) {
+  // Find all of the manifests which need to be downloaded.
+  var result = [];
+  var remote = [];
+  manifests = manifests.split(',');
+  manifests.forEach(function(manifest) {
+    if (UrlCheck.isWebUrl(manifest)) {
+      remote.push(manifest);
+    } else {
+      result.push(manifest);
+    }
+  });
+
+  var count = remote.length;
+  if (count === 0) {
+    return callback(null, manifests.join(','));
+  }
+
+  // Download the remote manifests.
+  var dir = path.resolve(__dirname, '..', 'manifests');
+  maybeMkdir(dir, function() {
+    remote.forEach(function(manifest) {
+      var dest = path.resolve(dir, uuid.v4() + '.json');
+      fs.unlink(dest, function() {
+        Download.inst.downloadToDisk(manifest, dest, function() {
+          result.push(dest);
+          if (--count === 0) {
+            callback(null, result.join(','));
+          }
+        });
+      });
+    });
+  });
+}
 
 /**
  * Find and parse manifest file.
@@ -35,36 +82,14 @@ function resolveRoot(root) {
   }
 
   return root;
-}
+} 
 
-function main() {
-  program
-    .version('1.0.0')
-    .usage([
-      '--master', '<host>',
-      '--manifests', '<file_1,file_2,...file_n>',
-      '--hostname', '<url>',
-      '--root', '<path>'
-    ].join(' '))
-    .option('--master [url]', 'NPM registry to mirror packages from')
-    .option('--manifests [comma separated files]', 'Node module manifest files')
-    .option('--hostname [hostname]', 'Hostname for npm mirror')
-    .option('--root [path]', 'Path to write downloaded packages')
-    .parse(process.argv);
-
-  if (!(program.master &&
-        program.manifests &&
-        program.hostname &&
-        program.root)) {
-    program.help();
-  }
-
-  // hostname
-  var hostname = program.hostname;
-  check(hostname).isUrl();
+function main(master, manifests, hostname, root) {
+  // master
+  check(master).isUrl();
 
   // manifests
-  var dependencies = program.manifests.split(',')
+  var dependencies = manifests.split(',')
     .map(function(manifestFile) {
       return parseManifest(manifestFile);
     })
@@ -73,12 +98,11 @@ function main() {
     });
   var packageToVersions = Package.mergeDependencies(dependencies);
 
-  // master
-  var master = program.master;
-  check(master).isUrl();
+  // hostname
+  check(hostname).isUrl();
 
   // root
-  var root = resolveRoot(program.root);
+  root = resolveRoot(program.root);
 
   var syncManager = new SyncManager(master, packageToVersions, hostname, root);
   debug('sync from ' + master);
@@ -93,5 +117,29 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  program
+    .version('1.0.0')
+    .usage([
+      '--master', '<host>',
+      '--manifests', '<file_1,file_2,...file_n>',
+      '--hostname', '<url>',
+      '--root', '<path>'
+    ].join(' '))
+    .option('--master [url]', 'NPM registry to mirror packages from')
+    .option('--manifests [comma separated files]',
+      'Node module manifests given by fs paths or http urls')
+    .option('--hostname [hostname]', 'Hostname for npm mirror')
+    .option('--root [path]', 'Path to write downloaded packages')
+    .parse(process.argv);
+
+  if (!(program.master &&
+        program.manifests &&
+        program.hostname &&
+        program.root)) {
+    program.help();
+  }
+
+  downloadManifests(program.manifests, function(err, manifests) {
+    main(program.master, manifests, program.hostname, program.root);
+  });
 }
