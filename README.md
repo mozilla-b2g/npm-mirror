@@ -17,7 +17,7 @@ npm install -g npm-mirror
 
 DEBUG=npm-mirror:SyncManager npm-mirror \
   --master http://registry.npmjs.org \
-  --manifest /absolute/path/to/target/package.json \
+  --manifests /absolute/path/to/target/package.json,/and/another/package.json \
   --hostname http://secret-npm-mirror.com \
   --root /absolute/path/to/download/packages/
 
@@ -34,9 +34,9 @@ npm install --registry http://secret-npm-mirror.com
 
 a fully qualified url for the master registry's root
 
-### manifest
+### manifests
 
-a fully qualifed path to a manifest file (ie https://npmjs.org/doc/json.html)
+a comma separated list of fully qualifed filesystem paths to or http urls for manifest files (ie https://npmjs.org/doc/json.html)
 
 #### hostname
 
