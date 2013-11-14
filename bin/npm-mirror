@@ -9,6 +9,7 @@ var Download = require('../lib/download'),
     maybeMkdir = require('../lib/maybemkdir'),
     path = require('path'),
     program = require('commander'),
+    temp = require('temp'),
     uuid = require('node-uuid');
 
 
@@ -39,8 +40,7 @@ function downloadManifests(manifests, callback) {
   }
 
   // Download the remote manifests.
-  var dir = path.resolve(__dirname, '..', 'manifests');
-  maybeMkdir(dir, function() {
+  temp.mkdir('manifests', function(e, dir) {
     remote.forEach(function(manifest) {
       var dest = path.resolve(dir, uuid.v4() + '.json');
       fs.unlink(dest, function() {
@@ -139,6 +139,7 @@ if (require.main === module) {
     program.help();
   }
 
+  temp.track();
   downloadManifests(program.manifests, function(err, manifests) {
     main(program.master, manifests, program.hostname, program.root);
   });
