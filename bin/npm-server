@@ -66,6 +66,7 @@ NpmServer.prototype = {
 
 if (require.main === module) {
   program
+    .version('1.2.0')
     .option('--port [number]', 'port number to use')
     .option('--root [path]', 'root path for packages')
     .parse(process.argv);

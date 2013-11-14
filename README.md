@@ -7,7 +7,7 @@ npm-mirror is a utility for mirroring a subset of npm packages from another npm 
 
 ## Notable Caveats
 
-+ Your webserver must be configured to map root requests to index.json files.
++ Your webserver must be configured to map root requests to index.json files (like bin/npm-server).
 + Git repos will not be synced
 
 ## Getting Started

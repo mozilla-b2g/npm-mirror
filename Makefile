@@ -1,8 +1,12 @@
 .PHONY: default
-default: lint test
+default: dependencies test
+
+.PHONY: dep
+dependencies:
+	npm install
 
 .PHONY: test
-test:
+test: lint
 	./node_modules/.bin/mocha
 
 .PHONY: lint
