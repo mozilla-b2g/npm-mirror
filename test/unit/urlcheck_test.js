@@ -26,5 +26,9 @@ suite('UrlCheck', function() {
     test('given not web url', function() {
       assert.ok(!subject.isWebUrl('>=1.0.0'));
     });
+
+    test('given a file path', function() {
+      assert.ok(!subject.isWebUrl('/path/to/package'));
+    });
   });
 });
