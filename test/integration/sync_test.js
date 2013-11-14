@@ -1,7 +1,14 @@
 var Package = require('../../lib/package'),
     exec = require('child_process').exec,
     fs = require('graceful-fs'),
-    path = require('path');
+    path = require('path'),
+    temp = require('temp');
+
+
+/**
+ * @type {string}
+ */
+var TEST_MASTER = 'http://registry.npmjs.org';
 
 
 /**
@@ -13,18 +20,27 @@ var Package = require('../../lib/package'),
  * @param {Function} done invoke when done.
  */
 function assertSynced(package, loose, root, done) {
-  function onVersion(e, version) {
+  Package.version(TEST_MASTER, package, loose, function(e, version) {
     if (e) {
       return done && done(e);
     }
 
-    var packageVersionPath = path.resolve(root, package, version);
-    waitFor(function() {
-      return fs.existsSync(packageVersionPath);
-    }, done);
-  }
+    var packageRoot = path.resolve(root, package);
+    var packageObject = path.resolve(root, package, 'index.json');
+    var versionRoot = path.resolve(root, package, version);
+    var versionObject = path.resolve(root, package, version, 'index.json');
+    var tarball =
+      path.resolve(root, package, version, package + '-' + version + '.tgz');
 
-  Package.version('http://registry.npmjs.org', package, loose, onVersion);
+    // Wait for all of the appropriate files to exist.
+    waitFor(function() {
+      return fs.existsSync(packageRoot) &&
+             fs.existsSync(packageObject) &&
+             fs.existsSync(versionRoot) &&
+             fs.existsSync(versionObject) &&
+             fs.existsSync(tarball);
+    }, done);
+  });
 }
 
 
@@ -58,62 +74,41 @@ function assertAllSynced(manifest, types, root, done) {
 
 
 suite('sync', function() {
-  var childProcess, master, manifests, hostname, root;
+  var childProcess, manifests, hostname, root;
 
-  suite('first time', function() {
-    suiteSetup(function(done) {
-      master = 'http://registry.npmjs.org';
-      manifests = [
-        path.resolve(__dirname, '../fixtures', 'gaia.json'),
-        path.resolve(__dirname, '../fixtures', 'npm-mirror.json')
-      ];
-      hostname = 'http://npm-mirror.pub.build.mozilla.org';
-      root = path.resolve(__dirname, '../..', 'tmp');
+  suiteSetup(function(done) {
+    temp.track();
+    manifests = [
+      path.resolve(__dirname, '../fixtures', 'gaia.json'),
+      path.resolve(__dirname, '../fixtures', 'package.json')
+    ];
+    hostname = 'http://npm-mirror.pub.build.mozilla.org';
+    root = temp.mkdirSync('temp');
 
-      var binary = path.resolve(__dirname, '../../bin/npm-mirror');
-      var cmd = [
-        binary,
-        '--master', master,
-        '--manifests', manifests.join(','),
-        '--hostname', hostname,
-        '--root', root
-      ].join(' ');
+    var binary = path.resolve(__dirname, '../../bin/npm-mirror');
+    var cmd = [
+      binary,
+      '--master', TEST_MASTER,
+      '--manifests', manifests.join(','),
+      '--hostname', hostname,
+      '--root', root
+    ].join(' ');
 
-      console.log(cmd);
-      childProcess = exec(cmd);
-      childProcess.once('exit', function() {
-        done();
-      });
-    });
-
-    suiteTeardown(function(done) {
-      childProcess = exec('rm -rf ' + root);
-      childProcess.once('exit', function() {
-        done();
-      });
-    });
-
-    test('should make sure root exists', function(done) {
-      var rootPath = path.resolve(__dirname, '../..', root);
-      waitFor(function() {
-        return fs.existsSync(rootPath);
-      }, done);
-    });
-
-    test('should sync all gaia devDependencies', function(done) {
-      assertAllSynced(manifests[0], ['devDependencies'], root, done);
-    });
-
-    test('should sync all npm-mirror dependencies', function(done) {
-      assertAllSynced(manifests[1], ['dependencies'], root, done);
-    });
-
-    test('should sync all npm-mirror devDependencies', function(done) {
-      assertAllSynced(manifests[1], ['devDependencies'], root, done);
+    childProcess = exec(cmd);
+    childProcess.once('exit', function() {
+      done();
     });
   });
 
-  suite('second time', function() {
-    // TODO(gaye)
+  test('should sync all gaia devDependencies', function(done) {
+    assertAllSynced(manifests[0], ['devDependencies'], root, done);
+  });
+
+  test('should sync all npm-mirror dependencies', function(done) {
+    assertAllSynced(manifests[1], ['dependencies'], root, done);
+  });
+
+  test('should sync all npm-mirror devDependencies', function(done) {
+    assertAllSynced(manifests[1], ['devDependencies'], root, done);
   });
 });
