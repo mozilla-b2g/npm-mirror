@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+var NodeStatic = require('node-static'),
+    debug = require('debug')('NpmServer'),
+    http = require('http'),
+    path = require('path'),
+    program = require('commander');
+
+
+/**
+ * @constructor
+ * @param {number} port number to use.
+ * @param {string} root path for packages.
+ */
+function NpmServer(port, root) {
+  this.port = port;
+  this.root = root;
+}
+module.exports = NpmServer;
+
+NpmServer.prototype = {
+  /**
+   * @type {number}
+   */
+  port: null,
+
+  /**
+   * @type {string}
+   */
+  root: null,
+
+  /**
+   * @type {http.Server}
+   */
+  httpServer: null,
+
+  /**
+   * Start the npm server.
+   */
+  start: function() {
+    var fileServer = new NodeStatic.Server(this.root);
+    this.httpServer = http.createServer(function(req, res) {
+      req.addListener('end', function() {
+        var url = req.url;
+        if (/.+\.tgz/.test(url)) {
+          // ...
+        } else if (/.+\.json/.test(url)) {
+          // ...
+        } else {
+          // We can assume they want a json object.
+          if (url.slice(-1) !== '/') {
+            req.url += '/';
+          }
+
+          req.url += 'index.json';
+        }
+
+        debug(req.url);
+        fileServer.serve(req, res);
+      }).resume();
+    });
+
+    this.httpServer.listen(this.port);
+  }
+};
+
+
+if (require.main === module) {
+  program
+    .option('--port [number]', 'port number to use')
+    .option('--root [path]', 'root path for packages')
+    .parse(process.argv);
+
+  var server = new NpmServer(program.port, program.root);
+  server.start();
+  debug('NpmServer running on port ' + server.port + ' serving ' + server.root);
+}
