@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+/**
+ * @fileoverview This is a little http server that listens for POST
+ *     requests with the locations of new node module manifests and then
+ *     shells out to npm-mirror to sync their dependencies.
+ */
+var debug = require('debug')('SyncHookServer'),
+    exec = require('child_process').exec,
+    http = require('http'),
+    program = require('commander');
+
+
+/**
+ * @constructor
+ * @param {number} port number to use.
+ * @param {string} binary path to npm-mirror.
+ * @param {Object} args npm-mirror args.
+ */
+function SyncHookServer(port, binary, args) {
+  this.port = port;
+  this.binary = binary;
+  this.args = args;
+}
+module.exports = SyncHookServer;
+
+SyncHookServer.prototype = {
+  /**
+   * @type {number}
+   */
+  port: null,
+
+  /**
+   * @type {string}
+   */
+  binary: null,
+
+  /**
+   * @type {Object}
+   */
+  args: null,
+
+  /**
+   * @type {http.Server}
+   */
+  httpServer: null,
+
+  /**
+   * Start the server.
+   */
+  start: function() {
+    var cmd = this.binary + ' ';
+    for (var arg in this.args) {
+      cmd += ('--' + arg + ' ' + this.args[arg] + ' ');
+    }
+
+    this.httpServer = http.createServer(function(req, res) {
+      debug(req.url);
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('OK');
+
+      // TODO(gaye): Grab new manifest location from POST request and
+      //     tack it onto the --manifests arg.
+
+      debug(cmd);
+      exec(cmd, function(err, stdout, stderr) {
+        if (err) {
+          throw err;
+        }
+
+        debug('stdout: ' + stdout);
+        debug('stderr: ' + stderr);
+      });
+    });
+
+    this.httpServer.listen(this.port);
+  }
+};
+
+
+function main(port, binary, args) {
+  var server = new SyncHookServer(port, binary, args);
+  server.start();
+  debug('SyncHookServer started on port ' + port);
+}
+
+if (require.main === module) {
+  program
+    .version('1.3.4')
+    .option('--port [number]', 'port number to use')
+    .option('--binary [path]', 'path to npm-mirror binary')
+    .parse(process.argv);
+
+  if (!(program.port && program.binary && program.args)) {
+    program.help();
+  }
+
+  main(program.port, program.binary, {
+    master: 'http://registry.npmjs.org',
+    manifests: 'https://raw.github.com/mozilla-b2g/gaia/master/package.json',
+    hostname: 'http://54.204.30.62:8080',
+    root: '/home/ubuntu/packages'
+  });
+}

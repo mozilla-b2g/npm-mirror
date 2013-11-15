@@ -1,6 +1,6 @@
 {
   "name": "npm-mirror",
-  "version": "1.3.0",
+  "version": "1.3.4",
   "repository": "https://github.com/mozilla-b2g/npm-mirror",
 
   "contributors": [
@@ -34,7 +34,8 @@
 
   "bin": {
     "npm-mirror": "bin/npm-mirror",
-    "npm-server": "bin/npm-server"
+    "npm-server": "bin/npm-server",
+    "sync-hook-server": "bin/sync-hook-server"
   },
 
   "scripts": {
