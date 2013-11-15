@@ -63,10 +63,7 @@ SyncHookServer.prototype = {
 
       debug(cmd);
       exec(cmd, function(err, stdout, stderr) {
-        if (err) {
-          throw err;
-        }
-
+        debug('error:' + err);
         debug('stdout: ' + stdout);
         debug('stderr: ' + stderr);
       });
@@ -85,7 +82,7 @@ function main(port, binary, args) {
 
 if (require.main === module) {
   program
-    .version('1.3.4')
+    .version('1.3.5')
     .option('--port [number]', 'port number to use')
     .option('--binary [path]', 'path to npm-mirror binary')
     .parse(process.argv);
