@@ -1,102 +1,183 @@
-// TODO(gaye): This is disabled since the npm-server won't die right now?
-//     This makes it so this test passes once and fails all subsequent times.
-
-// /**
-//  * @fileoverview An integration test that does the following:
-//  *     1. Sync packages from http://registry.npmjs.org for our manifest.
-//  *     2. Start a webserver to serve the packages.
-//  *     3. Run `npm install` from our repo and
-//  *     4. Make sure npm exits ok.
-//  */
-// var exec = require('child_process').exec,
-//     path = require('path'),
-//     temp = require('temp');
-
-
-// /**
-//  * @type {string}
-//  */
-// var TEST_MASTER = 'http://registry.npmjs.org';
+/**
+ * @fileoverview An integration test that does the following:
+ *     1. Sync packages from http://registry.npmjs.org for our manifest.
+ *     2. Start a webserver to serve the packages.
+ *     3. Run `npm install` from our repo and check that everything is ok.
+ */
+var Package = require(__dirname + '/../../lib/package'),
+    async = require('async'),
+    debug = require('debug')('InstallTest'),
+    exec = require('child_process').exec,
+    path = require('path'),
+    temp = require('temp');
 
 
-// /**
-//  * @type {number}
-//  */
-// var TEST_PORT = 8080;
+/**
+ * @type {string}
+ */
+var TEST_MASTER = 'http://registry.npmjs.org';
 
 
-// /**
-//  * @type {string}
-//  */
-// var TEST_HOST = 'http://localhost:' + TEST_PORT;
+/**
+ * @type {number}
+ */
+var TEST_PORT = 8080;
 
 
-// suite('install', function() {
-//   var mirror, server, manifest, root;
+/**
+ * @type {string}
+ */
+var TEST_HOST = 'http://localhost:' + TEST_PORT;
 
-//   // Run the mirror and bring up the npm server.
-//   suiteSetup(function(done) {
-//     temp.track();
-//     manifest = path.resolve(__dirname, '../fixtures', 'package.json');
-//     root = temp.mkdirSync('temp');
 
-//     var binary = path.resolve(__dirname, '../../bin/npm-mirror');
-//     var cmd = [
-//       binary,
-//       '--master', TEST_MASTER,
-//       '--manifests', manifest,
-//       '--hostname', TEST_HOST,
-//       '--root', root
-//     ].join(' ');
+/**
+ * @type {string}
+ */
+var SEMVER_REGEXP =
+  '(0|[1-9]\\d*)' + // major
+  '\\.(0|[1-9]\\d*)' + // minor
+  '\\.(0|[1-9]\\d*)' + // patch
+  '(?:-' + // start prerelease
+    '(' + // capture
+      '(?:' + // first identifier
+        '0|' + // 0, or
+        '[1-9]\\d*|' + // numeric identifier, or
+        '\\d*[a-zA-Z-][a-zA-Z0-9-]*' + // id with at least one non-number
+      ')' + // end first identifier
+      '(?:\\.' + // dot-separated
+        '(?:0|[1-9]\\d*|\\d*[a-zA-Z-][a-zA-Z0-9-]*)' + // identifier
+      ')*' + // zero or more of those
+    ')' + // end prerelease capture
+  ')?' + // prerelease is optional
+  '(?:' + // build tag (non-capturing)
+    '\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*' + // pretty much anything goes
+  ')?'; // build tag is optional
 
-//     mirror = exec(cmd);
-//     mirror.once('exit', function() {
-//       binary = path.resolve(__dirname, '../../bin/npm-server');
-//       cmd = [
-//         binary,
-//         '--port',
-//         TEST_PORT,
-//         '--root',
-//         root
-//       ].join(' ');
 
-//       server = exec(cmd);
-//       done();
-//     });
-//   });
+suite('npm install', function() {
+  var binary, server, manifest, root, err, stdout, stderr;
 
-//   // Kill the npm server.
-//   suiteTeardown(function(done) {
-//     server.once('exit', function() {
-//       done();
-//     });
+  /**
+   * Run npm-mirror.
+   */
+  function runNpmMirror(done) {
+    var binary = path.resolve(__dirname, '../../bin/npm-mirror');
+    var cmd = [
+      binary,
+      '--master', TEST_MASTER,
+      '--manifests', manifest,
+      '--hostname', TEST_HOST,
+      '--root', root
+    ].join(' ');
 
-//     server.kill();
-//   });
+    debug(cmd);
+    exec(cmd, function(err) {
+      done(err);
+    });
+  }
 
-//   // Remove the installed packages.
-//   suiteTeardown(function(done) {
-//     var modules =
-//       path.resolve(__dirname, '..', 'fixtures', 'node_modules');
-//     var cmd = ['rm', '-rf', modules].join(' ');
+  /**
+   * Bring up npm server.
+   */
+  function startNpmServer(done) {
+    var binary = path.resolve(__dirname, '../../bin/npm-server');
+    var cmd = [
+      binary,
+      '--port',
+      TEST_PORT,
+      '--root',
+      root
+    ].join(' ');
 
-//     var rm = exec(cmd);
-//     rm.on('exit', function() {
-//       done();
-//     });
-//   });
+    debug(cmd);
+    server = exec(cmd);
 
-//   test('npm should exit ok', function(done) {
-//     var dir = path.resolve(__dirname, '..', 'fixtures');
-//     var cmd = [
-//       'cd', dir, '&&',
-//       'npm', 'install', '--registry', 'http://localhost:8080'
-//     ].join(' ');
+    done();
+  }
 
-//     var install = exec(cmd);
-//     install.on('exit', function(event) {
-//       assert.strictEqual(event, 0);
-//       done();
-//     });
-//   });
-// });
+  /**
+   * `pkill --signal 9 npm-server`
+   */
+  function stopNpmServer(done) {
+    var cmd = 'fuser -k -n tcp 8080';
+    debug(cmd);
+    exec(cmd, function(err) {
+      done(err);
+    });
+  }
+
+  /**
+   * Run `npm install` against our registry.
+   */
+  function runNpmInstall(done) {
+    var dir = path.resolve(__dirname, '..', 'fixtures');
+    var cmd = [
+      'cd', dir, '&&',
+      'npm', 'install', '--registry', TEST_HOST
+    ].join(' ');
+
+    debug(cmd);
+    exec(cmd, function(_err, _stdout, _stderr) {
+      err = _err;
+      stdout = _stdout;
+      stderr = _stderr;
+      done(err);
+    });
+  }
+
+  /**
+   * Delete installed packages.
+   */
+  function deletePackages(done) {
+    var modules = path.resolve(__dirname, '..', 'fixtures', 'node_modules');
+    var cmd = [
+      'rm',
+      '-rf',
+      modules
+    ].join(' ');
+
+    debug(cmd);
+    exec(cmd, function(err) {
+      done(err);
+    });
+  }
+
+  suiteSetup(function(done) {
+    temp.track();
+    binary = path.resolve(__dirname, '../..', 'bin', 'npm-mirror');
+    manifest = path.resolve(__dirname, '..', 'fixtures', 'package.json');
+    root = temp.mkdirSync('temp');
+
+    async.series([
+      runNpmMirror,
+      startNpmServer,
+      runNpmInstall
+    ], function() {
+      done();
+    });
+  });
+
+  // Remove the installed packages.
+  suiteTeardown(function(done) {
+    async.series([
+      stopNpmServer,
+      deletePackages
+    ], function() {
+      done();
+    });
+  });
+
+
+  test('should not error', function() {
+    assert.strictEqual(err, null);
+  });
+
+  test('should list the dependencies to console.log', function() {
+    var dependencies = Object.keys(Package.dependencies(require(manifest)));
+    dependencies.forEach(function(dep) {
+      var format = dep + '@' + SEMVER_REGEXP + ' node_modules/' + dep;
+      var regex = new RegExp(format, 'g');
+      assert.ok(regex.test(stdout));
+    });
+  });
+});

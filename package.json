@@ -9,6 +9,7 @@
   ],
 
   "dependencies": {
+    "async": "~0.2.9",
     "commander": "~2.0.0",
     "debug": "~0.7.2",
     "graceful-fs": "~2.0.1",
