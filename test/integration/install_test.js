@@ -1,3 +1,4 @@
+/*global runNpmMirror*/
 /**
  * @fileoverview An integration test that does the following:
  *     1. Sync packages from http://registry.npmjs.org for our manifest.
@@ -56,25 +57,6 @@ var SEMVER_REGEXP =
 
 suite('npm install', function() {
   var binary, server, manifest, root, err, stdout, stderr;
-
-  /**
-   * Run npm-mirror.
-   */
-  function runNpmMirror(done) {
-    var binary = path.resolve(__dirname, '../../bin/npm-mirror');
-    var cmd = [
-      binary,
-      '--master', TEST_MASTER,
-      '--manifests', manifest,
-      '--hostname', TEST_HOST,
-      '--root', root
-    ].join(' ');
-
-    debug(cmd);
-    exec(cmd, function(err) {
-      done(err);
-    });
-  }
 
   /**
    * Bring up npm server.
@@ -149,7 +131,7 @@ suite('npm install', function() {
     root = temp.mkdirSync('temp');
 
     async.series([
-      runNpmMirror,
+      runNpmMirror.bind(this, TEST_MASTER, [manifest], TEST_HOST, root),
       startNpmServer,
       runNpmInstall
     ], function() {

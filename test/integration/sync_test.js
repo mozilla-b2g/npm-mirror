@@ -1,5 +1,5 @@
+/*global runNpmMirror*/
 var Package = require('../../lib/package'),
-    exec = require('child_process').exec,
     fs = require('graceful-fs'),
     path = require('path'),
     temp = require('temp');
@@ -74,7 +74,7 @@ function assertAllSynced(manifest, types, root, done) {
 
 
 suite('sync', function() {
-  var childProcess, manifests, hostname, root;
+  var manifests, hostname, root;
 
   suiteSetup(function(done) {
     temp.track();
@@ -85,30 +85,15 @@ suite('sync', function() {
     hostname = 'http://npm-mirror.pub.build.mozilla.org';
     root = temp.mkdirSync('temp');
 
-    var binary = path.resolve(__dirname, '../../bin/npm-mirror');
-    var cmd = [
-      binary,
-      '--master', TEST_MASTER,
-      '--manifests', manifests.join(','),
-      '--hostname', hostname,
-      '--root', root
-    ].join(' ');
-
-    childProcess = exec(cmd);
-    childProcess.once('exit', function() {
-      done();
-    });
+    runNpmMirror(TEST_MASTER, manifests, hostname, root, done);
   });
 
-  test('should sync all gaia devDependencies', function(done) {
+  test('should sync gaia dependencies', function(done) {
     assertAllSynced(manifests[0], ['devDependencies'], root, done);
   });
 
-  test('should sync all npm-mirror dependencies', function(done) {
-    assertAllSynced(manifests[1], ['dependencies'], root, done);
-  });
-
-  test('should sync all npm-mirror devDependencies', function(done) {
-    assertAllSynced(manifests[1], ['devDependencies'], root, done);
+  test('should sync npm-mirror dependencies', function(done) {
+    assertAllSynced(
+      manifests[1], ['dependencies', 'devDependencies'], root, done);
   });
 });
