@@ -15,13 +15,15 @@ npm-mirror is a utility for mirroring a subset of npm packages from another npm 
 ```
 npm install -g npm-mirror
 
-DEBUG=npm-mirror:SyncManager npm-mirror \
+DEBUG=* npm-mirror \
   --master http://registry.npmjs.org \
   --manifests /absolute/path/to/target/package.json,/and/another/package.json \
   --hostname http://secret-npm-mirror.com \
   --root /absolute/path/to/download/packages/
 
 // Start webserver rooted in packages directory
+// For example...
+npm-server --port 80 --path /absolute/path/to/download/packages/
 
 // Give it a whirl
 cd /path/to/target
