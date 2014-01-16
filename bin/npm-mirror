@@ -6,10 +6,8 @@ var Download = require('../lib/download'),
     check = require('validator').check,
     debug = require('debug')('npm-mirror'),
     fs = require('graceful-fs'),
-    maybeMkdir = require('../lib/maybemkdir'),
     path = require('path'),
     program = require('commander'),
-    temp = require('temp'),
     uuid = require('node-uuid');
 
 
@@ -87,7 +85,7 @@ function resolveRoot(root) {
   }
 
   return root;
-} 
+}
 
 function main(master, manifests, hostname, root) {
   // master
