@@ -8,6 +8,7 @@ var Download = require('../lib/download'),
     fs = require('graceful-fs'),
     path = require('path'),
     program = require('commander'),
+    temp = require('temp'),
     uuid = require('node-uuid');
 
 
@@ -121,7 +122,7 @@ function main(master, manifests, hostname, root) {
 
 if (require.main === module) {
   program
-    .version('1.4.0')
+    .version('1.4.2')
     .usage([
       '--master', '<host>',
       '--manifests', '<file_1,file_2,...file_n>',
