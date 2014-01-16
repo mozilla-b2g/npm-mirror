@@ -123,7 +123,7 @@ function main(master, manifests, hostname, root) {
 
 if (require.main === module) {
   program
-    .version('1.3.5')
+    .version('1.4.0')
     .usage([
       '--master', '<host>',
       '--manifests', '<file_1,file_2,...file_n>',
