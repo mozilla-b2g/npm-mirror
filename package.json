@@ -2,11 +2,7 @@
   "name": "npm-mirror",
   "version": "1.4.2",
   "repository": "https://github.com/mozilla-b2g/npm-mirror",
-
-  "contributors": [
-    "Gareth Aye <gareth.aye@gmail.com>",
-    "Will LaChance <wlachance@mozilla.com>"
-  ],
+  "author": "Gareth Aye [:gaye] <gaye@mozilla.com>",
 
   "dependencies": {
     "async": "~0.2.9",
